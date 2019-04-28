@@ -1,0 +1,17 @@
+[package]
+name = "clipboard-script"
+version = "0.1.0"
+authors = ["Douman <douman@gmx.se>"]
+edition = "2018"
+
+[[bin]]
+name = "furi_clean"
+path = "src/furi_clean.rs"
+
+[dependencies]
+clipboard-master = "2"
+clipboard-win = "2"
+
+[profile.release]
+lto = true
+opt-level = "z"
