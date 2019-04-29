@@ -52,23 +52,18 @@ impl ClipboardHandler for Handler {
         let text_len = content.len();
 
         let mut new_text = String::with_capacity(text_len / 2);
-        let mut is_added = false;
-        for part in text.split(SPLIT_PAT).map(|part| part.trim()) {
-            if part.len() == 0 {
+
+        let parts = text.split(SPLIT_PAT).map(|part| part.trim()).collect::<Vec<_>>();
+        for idx in 0..parts.len()-1 {
+            let part = unsafe { parts.get_unchecked(idx) };
+
+            if part.len() == 0 || is_furi_skip(part) {
                 continue;
             }
 
-            let prev_is_added = is_added;
-            is_added = !is_added;
-
-            match prev_is_added {
-                false => (),
-                true => if is_furi_skip(part) {
-                    continue
-                },
-            }
             new_text.push_str(part);
-        };
+        }
+        new_text.push_str(unsafe { parts.get_unchecked(parts.len()-1) });
 
         if text_len != new_text.len() {
             let _ = clip.set_string(&new_text);
