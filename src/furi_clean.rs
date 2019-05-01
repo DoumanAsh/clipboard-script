@@ -51,10 +51,13 @@ impl ClipboardHandler for Handler {
         let text = content.trim();
         let text_len = content.len();
 
-        let mut new_text = String::with_capacity(text_len / 2);
+        let mut new_text = String::with_capacity((text_len + text_len) / 3);
 
         let parts = text.split(SPLIT_PAT).map(|part| part.trim()).collect::<Vec<_>>();
-        for idx in 0..parts.len()-1 {
+
+        new_text.push_str(unsafe { parts.get_unchecked(0) });
+
+        for idx in 1..parts.len()-1 {
             let part = unsafe { parts.get_unchecked(idx) };
 
             if part.len() == 0 || is_furi_skip(part) {
@@ -63,6 +66,7 @@ impl ClipboardHandler for Handler {
 
             new_text.push_str(part);
         }
+
         new_text.push_str(unsafe { parts.get_unchecked(parts.len()-1) });
 
         if text_len != new_text.len() {
