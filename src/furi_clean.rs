@@ -10,8 +10,8 @@ use std::io;
 pub fn is_furi_skip<T: AsRef<str>>(text: T) -> bool {
     let text = text.as_ref();
     text.chars().all(|elem_char| match elem_char { '﹅'| ' ' | //Special case for tons of ````
-                                                   '\u{3040}'...'\u{309f}'| //hiragana
-                                                   '\u{30a0}'...'\u{30ff}' //katakana
+                                                   '\u{3040}'..='\u{309f}'| //hiragana
+                                                   '\u{30a0}'..='\u{30ff}' //katakana
                                                       => true,
                                                    _  => false,
     })
@@ -28,11 +28,13 @@ impl ClipboardHandler for Handler {
             match Clipboard::new() {
                 Ok(clip) => break clip,
                 Err(error) => {
-                    eprintln!("Error opening clipboard: {}", error);
                     attempts -= 1;
 
                     match attempts {
-                        0 => return CallbackResult::Next,
+                        0 => {
+                            eprintln!("Failed to open clipboard within 10 attempts. Error: {}", error);
+                            return CallbackResult::Next;
+                        },
                         _ => continue,
                     }
                 }
