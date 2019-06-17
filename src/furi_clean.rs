@@ -17,41 +17,35 @@ pub fn is_furi_skip<T: AsRef<str>>(text: T) -> bool {
     })
 }
 
-struct Handler;
+#[derive(Default)]
+struct Handler {
+    buffer: String,
+}
 
 impl ClipboardHandler for Handler {
     fn on_clipboard_change(&mut self) -> CallbackResult {
         const SPLIT_PAT: &[char] = &['\r', '\n'];
 
-        let mut attempts = 10;
-        let clip = loop {
-            match Clipboard::new() {
-                Ok(clip) => break clip,
-                Err(error) => {
-                    attempts -= 1;
-
-                    match attempts {
-                        0 => {
-                            eprintln!("Failed to open clipboard within 10 attempts. Error: {}", error);
-                            return CallbackResult::Next;
-                        },
-                        _ => continue,
-                    }
-                }
+        let clip = match Clipboard::new_attempts(10) {
+            Ok(clip) => clip,
+            Err(error) => {
+                eprintln!("Failed to open clipboard within 10 attempts. Error: {}", error);
+                return CallbackResult::Next;
             }
         };
 
-        let content = match clip.get_string() {
-            Ok(content) => content,
+        match clip.get_string(&mut self.buffer) {
+            Ok(_) => (),
             Err(_) => return CallbackResult::Next,
-        };
+        }
 
-        if !is_jp(&content) || !content.contains(SPLIT_PAT) {
+        if !is_jp(&self.buffer) || !self.buffer.contains(SPLIT_PAT) {
+            self.buffer.truncate(0);
             return CallbackResult::Next;
         }
 
-        let text = content.trim();
-        let text_len = content.len();
+        let text = self.buffer.trim();
+        let text_len = self.buffer.len();
 
         let mut new_text = String::with_capacity((text_len + text_len) / 3);
 
@@ -75,6 +69,7 @@ impl ClipboardHandler for Handler {
             let _ = clip.set_string(&new_text);
         }
 
+        self.buffer.truncate(0);
         CallbackResult::Next
     }
 
@@ -85,5 +80,5 @@ impl ClipboardHandler for Handler {
 }
 
 fn main() {
-    let _ = Master::new(Handler).run();
+    let _ = Master::new(Handler::default()).run();
 }
