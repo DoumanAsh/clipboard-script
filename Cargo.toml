@@ -10,7 +10,7 @@ path = "src/furi_clean.rs"
 
 [dependencies]
 clipboard-master = "2"
-clipboard-win = "3.0.0-alpha"
+clipboard-win = "3"
 
 [profile.release]
 lto = true
