@@ -9,8 +9,8 @@ name = "furi_clean"
 path = "src/furi_clean.rs"
 
 [dependencies]
-clipboard-master = "2"
-clipboard-win = "3"
+clipboard-master = "3"
+clipboard-win = "4"
 
 [profile.release]
 lto = true

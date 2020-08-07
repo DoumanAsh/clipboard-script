@@ -24,9 +24,11 @@ struct Handler {
 
 impl ClipboardHandler for Handler {
     fn on_clipboard_change(&mut self) -> CallbackResult {
+        use clipboard_win::{Setter, Getter};
+
         const SPLIT_PAT: &[char] = &['\r', '\n'];
 
-        let clip = match Clipboard::new_attempts(10) {
+        let _clip = match Clipboard::new_attempts(10) {
             Ok(clip) => clip,
             Err(error) => {
                 eprintln!("Failed to open clipboard within 10 attempts. Error: {}", error);
@@ -34,7 +36,7 @@ impl ClipboardHandler for Handler {
             }
         };
 
-        match clip.get_string(&mut self.buffer) {
+        match clipboard_win::Unicode.read_clipboard(&mut self.buffer) {
             Ok(_) => (),
             Err(_) => return CallbackResult::Next,
         }
@@ -66,7 +68,7 @@ impl ClipboardHandler for Handler {
         new_text.push_str(unsafe { parts.get_unchecked(parts.len()-1) });
 
         if text_len != new_text.len() {
-            let _ = clip.set_string(&new_text);
+            let _ = clipboard_win::Unicode.write_clipboard(&new_text);
         }
 
         self.buffer.truncate(0);
